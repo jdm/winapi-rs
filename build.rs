@@ -447,12 +447,12 @@ impl Graph {
         libs.sort();
         libs.dedup();
         // FIXME Temporary hacks until build script is redesigned.
-        libs.retain(|&&lib| match &*var("TARGET").unwrap() {
-            "aarch64-pc-windows-msvc" | "thumbv7a-pc-windows-msvc" => {
-                if lib == "opengl32" { false }
-                else { true }
-            },
-            _ => true,
+        libs.retain(|&&lib| {
+            let no_opengl = match &*var("TARGET").unwrap() {
+                "aarch64-pc-windows-msvc" | "thumbv7a-pc-windows-msvc" => true,
+                _ => var("CARGO_FEATURE_NO_OPENGL").is_ok(),
+            };
+            lib != "opengl32" || !no_opengl
         });
         let prefix = library_prefix();
         let kind = library_kind();
